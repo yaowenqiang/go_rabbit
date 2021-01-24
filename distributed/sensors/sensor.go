@@ -5,9 +5,17 @@ import (
     "log"
     "time"
     "strconv"
+    "bytes"
+    "encoding/gob"
     "math/rand"
+    "github.com/yaowenqiang/go_rabbit/distributed/dto"
+    "github.com/yaowenqiang/go_rabbit/distributed/qutils"
+    "github.com/streadway/amqp"
 
 )
+
+var url = "amqp://guest:guest@localhost:5672"
+
 
 var name  = flag.String("name", "sensor", "name of the sensor")
 var freq  = flag.Uint("freq", 5, "update frequency in cycles/sec")
@@ -23,11 +31,51 @@ var nom = (*max - *min) / 2 + *min
 func main() {
     flag.Parse()
 
+    conn, ch := qutils.GetChannel(url)
+
+    defer conn.Close()
+    defer ch.Close()
+
+    dataQueue := qutils.GetQueue(*name, ch)
+
+
     dur, _ := time.ParseDuration(strconv.Itoa(1000/int(*freq)) + "ms")
 
     signal := time.Tick(dur)
+
+    buf := new(bytes.Buffer)
+
+    enc := gob.NewEncoder(buf)
+
+
+
     for range signal{
         calcValue()
+        reading := dto.SensorMessage{
+            Name: *name,
+            Value: value,
+            Timestamp: time.Now(),
+        }
+
+        //log.Printf("reading : %+v\n", reading)
+
+        buf.Reset()
+        enc.Encode(reading)
+
+        msg := amqp.Publishing{
+            Body: buf.Bytes(),
+        }
+
+        //log.Printf("msg : %+v\n", msg)
+
+        ch.Publish(
+            "",
+            dataQueue.Name,
+            false,
+            false,
+            msg,
+        )
+
         log.Printf("Reading send. Value: %v\n", value)
     }
 
