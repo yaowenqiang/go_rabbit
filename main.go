@@ -3,13 +3,40 @@ package main
 import(
     "fmt"
     "log"
+    "time"
     "github.com/streadway/amqp"
 )
 
 func main() {
-    server()
+    go client()
+    go server()
+
+    var a string
+    fmt.Scanln(&a)
 }
 
+func client() {
+    conn, ch, q := getQueue()
+    defer conn.Close()
+    defer ch.Close()
+
+    msgs, err := ch.Consume(
+        q.Name,
+        "",
+        true,
+        false,
+        false,
+        false,
+        nil,
+    )
+
+    faildError(err, "Failed to register a consumer")
+
+    for msg := range msgs {
+        log.Printf("Received message with message: %s", msg.Body)
+    }
+
+}
 func server() {
     conn, ch, q := getQueue()
     defer conn.Close()
@@ -19,9 +46,11 @@ func server() {
         Body: []byte("Hello RabbitMQ"),
     }
 
-    //for {
+    for {
         ch.Publish("", q.Name, false, false, msg)
-    //}
+        time.Sleep(1 * time.Second)
+
+    }
 }
 
 func getQueue() (*amqp.Connection,*amqp.Channel, *amqp.Queue) {
