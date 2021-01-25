@@ -38,12 +38,13 @@ func main() {
 
     dataQueue := qutils.GetQueue(*name, ch)
 
-    sensorQueue := qutils.GetQueue(qutils.SensorListQueue,ch)
+    //sensorQueue := qutils.GetQueue(qutils.SensorListQueue,ch)
+
     msg := amqp.Publishing{Body: []byte(*name)}
 
     ch.Publish(
+        "amq.fanout",
         "",
-        sensorQueue.Name,
         false,
         false,
         msg,
@@ -71,6 +72,7 @@ func main() {
         //log.Printf("reading : %+v\n", reading)
 
         buf.Reset()
+        enc = gob.NewEncoder(buf)
         enc.Encode(reading)
 
         msg := amqp.Publishing{
