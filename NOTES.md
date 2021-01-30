@@ -12,3 +12,12 @@
 > rabbitmqctl   set_permissions -p / username  ".*" ".*" ".*" // read/write/configure permissions
 > mnisia database
  > https://www.rabbitmq.com/configure.html
+
+# cluster
+
+> rabbitmqctl cluster_tatus
+
+ > /var/lib/rabbitmq/.erlang.cookie
+ > rabbitmqctl join_cluster clustername // add ip  clustername to /var/hosts 
+ > rabbitmqctl set_cluster_name rabbit@alphacluster
+
