@@ -7,3 +7,8 @@
 > rabbitmq-plugins diable rabbitmq_mamagement
 > https://www.rabbitmq.com/rabbitmq-plugins.8.html
 > localhost:15672 guest/guest
+> rabbitmqctl   add_user username password
+> rabbitmqctl   set_user_tags username  permission_tag(administrator)
+> rabbitmqctl   set_permissions -p / username  ".*" ".*" ".*" // read/write/configure permissions
+> mnisia database
+ > https://www.rabbitmq.com/configure.html
